@@ -3,6 +3,7 @@ const app = express()
 const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config()
+const ObjectId = require('mongodb').ObjectID;
 const MongoClient = require('mongodb').MongoClient;
 
 
@@ -38,13 +39,36 @@ client.connect(err => {
     })
 
     //get single product by id
-    app.get('/addProduct/_:id', (req, res) => {
+    app.get('/foods/:id', (req, res) => {
         foodCollection
-          .find({ _id: ObjectId(req.params._id) })
+          .find({ _id: ObjectId(req.params.id) })
           .toArray((err, documents) => {
             res.send(documents[0]);
           });
       });
+
+      app.delete("/deleteProduct/:id", (req, res) => {
+        console.log("id:", req.params.id)
+    
+        foodCollection.deleteOne({ _id: ObjectId(req.params._id) })
+            .then((result) => {
+                console.log(result);
+                res.send(result.deletedCount > 0)
+            })
+    })
+
+    // Insert Product
+  app.post('/admin', (req, res)=>{
+    const newEvent = req.body;
+    console.log('adding new event', newEvent)
+    foodCollection.insertOne(newEvent)
+    .then(result =>{
+      console.log('inserted count', result.insertedCount)
+      res.send(result.insertedCount > 0)
+    })
+  })
+
+
       
       app.get('/', (req, res) => {
           res.send('Its working');
