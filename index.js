@@ -3,7 +3,7 @@ const app = express()
 const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config()
-const ObjectId = require('mongodb').ObjectID;
+const ObjectId = require('mongodb').ObjectId;
 const MongoClient = require('mongodb').MongoClient;
 
 
@@ -19,6 +19,8 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
     const foodCollection = client.db("buyfood").collection("products");
+    const ordersCollection = client.db("buyfood").collection("order1");
+    console.log(err);
 
     app.post('/addFoods', (req, res) => {
         const newEvent = req.body;
@@ -38,17 +40,19 @@ client.connect(err => {
         })
     })
 
-    //get single product by id
-    app.get('/foods/:id', (req, res) => {
-        foodCollection
-          .find({ _id: ObjectId(req.params.id) })
-          .toArray((err, documents) => {
-            res.send(documents[0]);
-          });
-      });
+   
 
-      app.delete("/deleteProduct/:id", (req, res) => {
-        console.log("id:", req.params.id)
+      app.get("/product/:_id", (req, res) => {
+        foodCollection
+            .find({ _id: ObjectId(req.params._id) })
+            .toArray((err, documents) => {
+                res.send(documents);
+            });
+    });
+
+
+      app.delete("/delete/:_id", (req, res) => {
+        console.log("id:", req.params._id)
     
         foodCollection.deleteOne({ _id: ObjectId(req.params._id) })
             .then((result) => {
@@ -57,16 +61,23 @@ client.connect(err => {
             })
     })
 
-    // Insert Product
-  app.post('/admin', (req, res)=>{
-    const newEvent = req.body;
-    console.log('adding new event', newEvent)
-    foodCollection.insertOne(newEvent)
-    .then(result =>{
-      console.log('inserted count', result.insertedCount)
-      res.send(result.insertedCount > 0)
-    })
-  })
+
+    app.post("/addOrder", (req, res) => {
+      const order = req.body;
+      ordersCollection.insertOne(order).then((result) => {
+          res.send(result.insertedCount > 0);
+      });
+  });
+
+  app.get("/orders", (req, res) => {
+    ordersCollection
+        .find({ email: req.query.email })
+        .toArray((err, items) => {
+            res.send(items);
+        });
+});
+
+
 
 
       
